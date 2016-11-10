@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	// "log"
-	// "net/http"
+	
+	"github.com/reechou/gorobot/config"
 )
 
 type ServiceError struct {
@@ -25,7 +25,7 @@ func CheckErr(err error) {
 }
 
 func main() {
-	wx := wxweb{}
+	wx := NewWxWeb(config.NewConfig())
 	wx.start()
 
 	// http.Handle("/message", &ApiServer{ApiName: "message"})
