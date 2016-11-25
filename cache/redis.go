@@ -83,7 +83,7 @@ func (rc *RedisCache) PutNX(key string, val interface{}) error {
 	if _, err = rc.do("SETNX", key, val); err != nil {
 		return err
 	}
-	
+
 	if _, err = rc.do("HSET", rc.redisInfo.Key, key, true); err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (rc *RedisCache) PutEX(key string, val interface{}, timeout time.Duration) 
 	if _, err = rc.do("SETEX", key, int64(timeout/time.Second), val); err != nil {
 		return err
 	}
-	
+
 	if _, err = rc.do("HSET", rc.redisInfo.Key, key, true); err != nil {
 		return err
 	}

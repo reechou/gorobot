@@ -1,12 +1,11 @@
-package main
+package wxweb
 
 import (
 	"encoding/json"
-	"github.com/larspensjo/config"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-	"fmt"
 )
 
 func GenerateId() string {
@@ -17,7 +16,7 @@ func JsonEncode(nodes interface{}) string {
 	body, err := json.Marshal(nodes)
 	if err != nil {
 		panic(err.Error())
-		return "[]"
+		return "{}"
 	}
 	return string(body)
 }
@@ -61,30 +60,4 @@ func float2Int(input interface{}) interface{} {
 		return false
 	}
 	return input
-}
-
-func getConfig(sec string) (map[string]string, error) {
-	targetConfig := make(map[string]string)
-	cfg, err := config.ReadDefault("config.ini")
-	if err != nil {
-		return targetConfig, Error("unable to open config file or wrong fomart")
-	}
-	sections := cfg.Sections()
-	if len(sections) == 0 {
-		return targetConfig, Error("no " + sec + " config")
-	}
-	for _, section := range sections {
-		if section != sec {
-			continue
-		}
-		sectionData, _ := cfg.SectionOptions(section)
-		for _, key := range sectionData {
-			value, err := cfg.String(section, key)
-			if err == nil {
-				targetConfig[key] = value
-			}
-		}
-		break
-	}
-	return targetConfig, nil
 }

@@ -1,10 +1,10 @@
 package cache
 
 import (
-	"testing"
-	"fmt"
 	"encoding/json"
-	
+	"fmt"
+	"testing"
+
 	"github.com/reechou/gorobot/config"
 )
 

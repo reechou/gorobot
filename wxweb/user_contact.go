@@ -1,10 +1,11 @@
-package main
+package wxweb
 
 import (
 	"fmt"
 	"strings"
 	"sync"
-	
+	"time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/cache"
 )
@@ -46,7 +47,7 @@ type UserGroup struct {
 	NickName    string
 	UserName    string
 	MemberList  map[string]*GroupUserInfo
-	
+
 	rankRedis *cache.RedisCache
 
 	offset *MsgOffset
@@ -68,7 +69,7 @@ func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.R
 			MsgIDStart: -1,
 			MsgIDEnd:   -1,
 		},
-		msgs: make([]*MsgInfo, MSG_LEN),
+		msgs:      make([]*MsgInfo, MSG_LEN),
 		rankRedis: rankRedis,
 	}
 }
@@ -114,7 +115,7 @@ func (self *UserGroup) GetInviteRank() string {
 		//	userRank += "@"
 		//}
 		userRank += string(list[i].([]byte))
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			userRank += ": "
 		} else {
 			userRank += "人\n"
@@ -128,9 +129,9 @@ func (self *UserGroup) GetInviteRank() string {
 func (self *UserGroup) AppendMsg(msg *MsgInfo) {
 	self.Lock()
 	defer self.Unlock()
-	
+
 	msg.MsgID = self.msgId
-	
+
 	if self.offset.SliceStart == -1 && self.offset.SliceEnd == -1 && self.offset.MsgIDStart == -1 && self.offset.MsgIDEnd == -1 {
 		self.msgs[0] = msg
 		self.offset.SliceStart = 0
@@ -140,16 +141,16 @@ func (self *UserGroup) AppendMsg(msg *MsgInfo) {
 	} else {
 		self.offset.MsgIDEnd = msg.MsgID
 		self.msgs[self.offset.SliceEnd] = msg
-		if self.offset.SliceEnd - self.offset.SliceStart == -1 ||
-			self.offset.SliceEnd - self.offset.SliceStart == (MSG_LEN - 1) ||
-			self.offset.SliceEnd - self.offset.SliceStart == (1 - MSG_LEN) {
-			self.offset.SliceStart = (self.offset.SliceStart+1) % MSG_LEN
+		if self.offset.SliceEnd-self.offset.SliceStart == -1 ||
+			self.offset.SliceEnd-self.offset.SliceStart == (MSG_LEN-1) ||
+			self.offset.SliceEnd-self.offset.SliceStart == (1-MSG_LEN) {
+			self.offset.SliceStart = (self.offset.SliceStart + 1) % MSG_LEN
 			self.offset.MsgIDStart = self.msgs[self.offset.SliceStart].MsgID
 		}
-		self.offset.SliceEnd = (self.offset.SliceEnd+1) % MSG_LEN
+		self.offset.SliceEnd = (self.offset.SliceEnd + 1) % MSG_LEN
 	}
 	logrus.Debugf("group[%s] add msg[%v] offset[%v]", self.UserName, msg, self.offset)
-	
+
 	self.msgId++
 }
 
@@ -170,19 +171,83 @@ func (self *UserGroup) GetMsgList(msgId int) []*MsgInfo {
 	} else {
 		return self.msgs[start:self.offset.SliceEnd]
 	}
-	
+
 	return nil
 }
 
 type UserContact struct {
-	Friends map[string]*UserFriend
-	Groups  map[string]*UserGroup
+	wx         *WxWeb
+	Friends     map[string]*UserFriend
+	NickFriends map[string]*UserFriend
+	Groups      map[string]*UserGroup
+	
+	IfInviteMemberSuccess bool
 }
 
-func NewUserContact() *UserContact {
+func NewUserContact(wx *WxWeb) *UserContact {
 	return &UserContact{
-		Friends: make(map[string]*UserFriend),
-		Groups:  make(map[string]*UserGroup),
+		wx:          wx,
+		Friends:     make(map[string]*UserFriend),
+		NickFriends: make(map[string]*UserFriend),
+		Groups:      make(map[string]*UserGroup),
+	}
+}
+
+func (self *UserContact) InviteMembers() {
+	if self.wx.cfg.IfInvite {
+		var groupUserName string
+		for _, v := range self.Groups {
+			if strings.Contains(v.NickName, "网购特卖") {
+				groupUserName = v.UserName
+				break
+			}
+		}
+		if groupUserName != "" {
+			inviteNum := 0
+			var memberList []string
+			for _, v := range self.Friends {
+				memberList = append(memberList, v.UserName)
+				if len(memberList) >= 10 {
+					data, ok := self.wx.WebwxupdatechatroomInvitemember(groupUserName, memberList)
+					if ok {
+						dataJson := JsonDecode(data)
+						if dataJson != nil {
+							dataMap := dataJson.(map[string]interface{})
+							retCode := dataMap["BaseResponse"].(map[string]interface{})["Ret"].(int)
+							if retCode == -34 {
+								time.Sleep(11 * time.Minute)
+							} else {
+								for _, v2 := range memberList {
+									self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
+									time.Sleep(time.Second)
+								}
+							}
+						}
+					}
+					inviteNum += 10
+					// clear
+					memberList = nil
+					time.Sleep(8 * time.Second)
+					if inviteNum >= 200 {
+						time.Sleep(2 * time.Minute)
+						inviteNum = 0
+					}
+				}
+			}
+			if memberList != nil {
+				time.Sleep(8 * time.Second)
+				self.wx.WebwxupdatechatroomInvitemember(groupUserName, memberList)
+				for _, v2 := range memberList {
+					self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
+				}
+				// clear
+				memberList = nil
+			}
+		} else {
+			logrus.Errorf("check group not found.")
+		}
+		self.IfInviteMemberSuccess = true
+		logrus.Infof("[%s] invite members success.", self.wx.MyNickName)
 	}
 }
 
@@ -192,12 +257,11 @@ func (self *UserContact) PrintGroupInfo() {
 	members := make(map[string]int)
 	for _, v := range self.Groups {
 		fmt.Println("群:", v.NickName)
-		if !strings.Contains(v.NickName, "双") && !strings.Contains(v.NickName, "天猫") && !strings.Contains(v.NickName, "淘宝") {
+		if !strings.Contains(v.NickName, "双") && !strings.Contains(v.NickName, "网购特卖") && !strings.Contains(v.NickName, "淘宝") {
 			continue
 		}
 		allGroupNum++
 		fmt.Println("\t群:", v.NickName)
-		//fmt.Println("\t拥有群成员:", len(v.MemberList))
 		for _, v2 := range v.MemberList {
 			_, ok := members[v2.UserName]
 			if ok {

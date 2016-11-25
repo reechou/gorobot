@@ -1,0 +1,1 @@
+filter 小背带 anytime receivemsg $empty $empty people sendmsg^people^$from^text>xxxx
