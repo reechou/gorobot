@@ -505,7 +505,11 @@ func (self *WxWeb) webwxstatusnotify(args ...interface{}) bool {
 	if err != nil {
 		return false
 	}
-	data := JsonDecode(res).(map[string]interface{})
+	dataJson := JsonDecode(res)
+	if dataJson == nil {
+		return false
+	}
+	data := dataJson.(map[string]interface{})
 	retCode := data["BaseResponse"].(map[string]interface{})["Ret"].(int)
 	return retCode == 0
 }
@@ -1219,7 +1223,7 @@ func (self *WxWeb) Run() {
 	self._run("[*] 获取好友列表 ... ", self.webwxgetcontact)
 	self._run("[*] 获取群列表 ... ", self.webwxbatchgetcontact)
 	go self.Contact.InviteMembers()
-	//self.Contact.PrintGroupInfo()
+	self.Contact.PrintGroupInfo()
 	//self.testUploadMedia()
 	self.Lock()
 	self.ifLogin = true
