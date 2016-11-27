@@ -522,7 +522,12 @@ func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 		return false
 	}
 
-	data := JsonDecode(res).(map[string]interface{})
+	dataJson := JsonDecode(res)
+	if dataJson == nil {
+		logrus.Errorf("webwxgetcontact dataJson == nil")
+		return false
+	}
+	data := dataJson.(map[string]interface{})
 	if data == nil {
 		logrus.Errorf("webwxgetcontact JsonDecode error: %v", err)
 		return false
