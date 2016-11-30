@@ -64,7 +64,7 @@ type WxWeb struct {
 	cookies        []*http.Cookie
 	ifTestSyncOK   bool
 	ifChangeCookie bool
-	SpecialUsers   []string
+	SpecialUsers   map[string]int
 	lastCheckTs    int64
 	mediaCount     int64
 	TestUserName   string
@@ -93,6 +93,38 @@ func NewWxWeb(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.Re
 		mediaCount:   -1,
 		stopped:      make(chan struct{}),
 		wxh:          wxh,
+	}
+	wx.SpecialUsers = map[string]int{
+		"newsapp":               1,
+		"fmessage":              1,
+		"filehelper":            1,
+		"weibo":                 1,
+		"qqmail":                1,
+		"tmessage":              1,
+		"qmessage":              1,
+		"qqsync":                1,
+		"floatbottle":           1,
+		"lbsapp":                1,
+		"shakeapp":              1,
+		"medianote":             1,
+		"qqfriend":              1,
+		"readerapp":             1,
+		"blogapp":               1,
+		"facebookapp":           1,
+		"masssendapp":           1,
+		"meishiapp":             1,
+		"feedsapp":              1,
+		"voip":                  1,
+		"blogappweixin":         1,
+		"weixin":                1,
+		"brandsessionholder":    1,
+		"weixinreminder":        1,
+		"wxid_novlwrv3lqwv11":   1,
+		"gh_22b87fa7cb3c":       1,
+		"officialaccounts":      1,
+		"notification_messages": 1,
+		"wxitil":                1,
+		"userexperience_alarm":  1,
 	}
 
 	return wx
@@ -459,7 +491,7 @@ func (self *WxWeb) synccheck() (string, string) {
 	if data == "" {
 		return "9999", "0"
 	}
-	logrus.Debugf("synccheck result: %s", data)
+	//logrus.Debugf("synccheck result: %s", data)
 	re := regexp.MustCompile(`window.synccheck={retcode:"(\d+)",selector:"(\d+)"}`)
 	find := re.FindStringSubmatch(data)
 	if len(find) > 2 {

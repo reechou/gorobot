@@ -127,7 +127,7 @@ func (self *EventManager) Run() {
 }
 
 func (self *EventManager) ReceiveMsg(msg *wxweb.ReceiveMsgInfo) {
-	logrus.Debugf("event manager reveive msg: %v", msg)
+	//logrus.Debugf("event manager reveive msg: %v", msg)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 	select {

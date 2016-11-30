@@ -206,6 +206,13 @@ func (self *UserContact) InviteMembers() {
 			inviteNum := 0
 			var memberList []string
 			for _, v := range self.Friends {
+				_, ok := self.wx.SpecialUsers[v.UserName]
+				if ok {
+					continue
+				}
+				if v.NickName == "你好杭州" {
+					continue
+				}
 				memberList = append(memberList, v.UserName)
 				if len(memberList) >= 10 {
 					data, ok := self.wx.WebwxupdatechatroomInvitemember(groupUserName, memberList)
@@ -215,7 +222,8 @@ func (self *UserContact) InviteMembers() {
 							dataMap := dataJson.(map[string]interface{})
 							retCode := dataMap["BaseResponse"].(map[string]interface{})["Ret"].(int)
 							if retCode == -34 {
-								time.Sleep(11 * time.Minute)
+								logrus.Errorf("wx[%s] invite member get -34 error, maybe sleep some minute", self.wx.MyNickName)
+								time.Sleep(30 * time.Minute)
 							} else {
 								for _, v2 := range memberList {
 									self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
@@ -257,7 +265,7 @@ func (self *UserContact) PrintGroupInfo() {
 	members := make(map[string]int)
 	for _, v := range self.Groups {
 		fmt.Println("群:", v.NickName)
-		if !strings.Contains(v.NickName, "双") && !strings.Contains(v.NickName, "网购特卖") && !strings.Contains(v.NickName, "淘宝") {
+		if !strings.Contains(v.NickName, "网购特卖") {
 			continue
 		}
 		allGroupNum++
