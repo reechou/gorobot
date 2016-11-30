@@ -197,6 +197,10 @@ func NewUserContact(wx *WxWeb) *UserContact {
 
 func (self *UserContact) InviteMembers() {
 	if self.wx.cfg.IfInvite {
+		if self.wx.MyNickName == "小健健" {
+			logrus.Debugf("小健健 not exec invite members.")
+			return 
+		}
 		var groupUserName string
 		for _, v := range self.Groups {
 			if strings.Contains(v.NickName, "网购特卖") {
