@@ -687,6 +687,10 @@ func (self *WxWeb) webwxbatchgetcontact(args ...interface{}) bool {
 					gv.NickName = groupNickName
 					gv.ContactFlag = groupContactFlag
 				}
+				gv := self.Contact.Groups[groupUserName]
+				if gv != nil {
+					self.Contact.NickGroups[groupNickName] = gv
+				}
 			}
 			// clear
 			num = 0
@@ -755,6 +759,10 @@ func (self *WxWeb) webwxbatchgetcontact(args ...interface{}) bool {
 				gv.MemberList[userName] = gui
 				gv.NickName = groupNickName
 				gv.ContactFlag = groupContactFlag
+			}
+			gv := self.Contact.Groups[groupUserName]
+			if gv != nil {
+				self.Contact.NickGroups[groupNickName] = gv
 			}
 		}
 	}
@@ -936,6 +944,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 					logrus.Debugf("mod Contact group: %s oldmemberlen:%d newmemberlen: %d", userName, len(group.MemberList), len(memberListMap))
 					group.MemberList = memberListMap
 					self.Contact.Groups[userName] = group
+					self.Contact.NickGroups[groupNickName] = group
 				}
 			}
 		}
@@ -974,7 +983,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 				if self.filterMsg(fromUserName, content) {
 					continue
 				}
-				logrus.Debugf("[*] 你有新的群文本消息，请注意查收")
+				//logrus.Debugf("[*] 你有新的群文本消息，请注意查收")
 				group := self.Contact.Groups[fromUserName]
 				if group == nil {
 					logrus.Errorf("cannot found the group[%s]", fromUserName)
@@ -992,6 +1001,8 @@ func (self *WxWeb) handleMsg(r interface{}) {
 				}
 				group.AppendMsg(msg)
 
+				receiveMsg.FromGroupName = group.NickName
+				receiveMsg.FromNickName = sendPeople.NickName
 				receiveMsg.FromType = FROM_TYPE_GROUP
 			} else {
 				receiveMsg.FromType = FROM_TYPE_PEOPLE

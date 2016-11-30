@@ -64,7 +64,7 @@ func (self *EventFilter) Run() {
 	for {
 		select {
 		case msg := <-self.msgChan:
-			logrus.Debugf("filter msg: %v", msg)
+			//logrus.Debugf("filter msg: %v", msg)
 			if self.Event != msg.msg.ReceiveEvent {
 				continue
 			}
@@ -74,13 +74,21 @@ func (self *EventFilter) Run() {
 				}
 			}
 			if self.Msg != "" {
-				if self.Msg != msg.msg.Msg {
+				//if self.Msg != msg.msg.Msg {
+				//	continue
+				//}
+				if !ExecCheckFunc(self.Msg, msg.msg.Msg) {
 					continue
 				}
 			}
 			if self.From != "" {
-				if self.From != msg.msg.FromNickName {
-					continue
+				//if self.From != msg.msg.FromNickName {
+				//	continue
+				//}
+				if msg.msg.FromType == CHAT_TYPE_GROUP {
+					if !ExecCheckFunc(self.From, msg.msg.FromGroupName) {
+						continue
+					}
 				}
 			}
 			for _, v := range self.DoEvent {

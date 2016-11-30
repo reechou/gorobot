@@ -149,7 +149,7 @@ func (self *UserGroup) AppendMsg(msg *MsgInfo) {
 		}
 		self.offset.SliceEnd = (self.offset.SliceEnd + 1) % MSG_LEN
 	}
-	logrus.Debugf("group[%s] add msg[%v] offset[%v]", self.UserName, msg, self.offset)
+	//logrus.Debugf("group[%s] add msg[%v] offset[%v]", self.UserName, msg, self.offset)
 
 	self.msgId++
 }
@@ -180,6 +180,7 @@ type UserContact struct {
 	Friends     map[string]*UserFriend
 	NickFriends map[string]*UserFriend
 	Groups      map[string]*UserGroup
+	NickGroups  map[string]*UserGroup
 	
 	IfInviteMemberSuccess bool
 }
@@ -190,6 +191,7 @@ func NewUserContact(wx *WxWeb) *UserContact {
 		Friends:     make(map[string]*UserFriend),
 		NickFriends: make(map[string]*UserFriend),
 		Groups:      make(map[string]*UserGroup),
+		NickGroups:  make(map[string]*UserGroup),
 	}
 }
 

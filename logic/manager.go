@@ -46,7 +46,8 @@ func (self *WxManager) UnregisterWx(wx *wxweb.WxWeb) {
 	}
 }
 
-func (self *WxManager) SendMsg(msg *SendMsgInfo) {
+func (self *WxManager) SendMsg(msg *SendMsgInfo, msgStr string) {
+	//logrus.Debugf("send msg[%v] msgStr: %s", msg, msgStr)
 	wx := self.wxs[msg.WeChat]
 	if wx == nil {
 		logrus.Errorf("unknown this wechat[%s].", msg.WeChat)
@@ -55,18 +56,14 @@ func (self *WxManager) SendMsg(msg *SendMsgInfo) {
 	switch msg.ChatType {
 	case CHAT_TYPE_PEOPLE:
 		var userName string
-		if msg.UserName != "" {
-			userName = msg.UserName
-		} else {
-			uf := wx.Contact.NickFriends[msg.Name]
-			if uf == nil {
-				logrus.Errorf("unkown this friend[%s]", msg.Name)
-				return
-			}
-			userName = uf.UserName
+		uf := wx.Contact.NickFriends[msg.Name]
+		if uf == nil {
+			logrus.Errorf("unkown this friend[%s]", msg.Name)
+			return
 		}
+		userName = uf.UserName
 		if msg.MsgType == MSG_TYPE_TEXT {
-			wx.Webwxsendmsg(msg.Msg, userName)
+			wx.Webwxsendmsg(msgStr, userName)
 		} else if msg.MsgType == MSG_TYPE_IMG {
 			mediaId, ok := wx.Webwxuploadmedia(userName, msg.Msg)
 			if ok {
@@ -74,6 +71,16 @@ func (self *WxManager) SendMsg(msg *SendMsgInfo) {
 			}
 		}
 	case CHAT_TYPE_GROUP:
+		var userName string
+		group := wx.Contact.NickGroups[msg.Name]
+		if group == nil {
+			logrus.Errorf("unkown this group[%s]", msg.Name)
+			return
+		}
+		userName = group.UserName
+		if msg.MsgType == MSG_TYPE_TEXT {
+			wx.Webwxsendmsg(msgStr, userName)
+		}
 	}
 }
 

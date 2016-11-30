@@ -1,1 +1,2 @@
 filter 小背带 anytime receivemsg $empty $empty people sendmsg^people^$from^text>xxxx
+filter 小健健 anytime receivemsg notinclude()即可领券,本群非广告群 $empty group sendmsg^group^小健健信息交流群^text>消息来自【$fromgroup】消息发送人【$fromuser】$frommsg
