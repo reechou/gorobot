@@ -1,3 +1,7 @@
 filter 小背带 anytime receivemsg $empty $empty people sendmsg^people^$from^text>>>我是小背带[呲牙]<br/>有什么能帮助你吗
 filter 小健健 anytime receivemsg notinclude()即可领券,本群非广告群 notinclude()小健健 group sendmsg^group^小健健信息交流群^text>>>消息来自于【$fromgroup】<br/>消息发送人【$fromuser】<br/>$frommsg
 filter 小背带 anytime receivemsg notinclude()即可领券,本群非广告群 notinclude()小健健 group sendmsg^group^小健健信息交流群^text>>>消息来自于【$fromgroup】<br/>消息发送人【$fromuser】<br/>$frommsg
+cron 小健健 0,30,23,*,*,* sendmsg^group^小健健信息交流群^text>>>stategroupnum()include()网购特卖内部优惠
+cron 小健健 0,30,23,*,*,* sendmsg^group^小健健信息交流群^text>>>stategroupnum()include()天猫淘宝内部优惠
+cron 小健健 0,30,23,*,*,* sendmsg^group^小健健信息交流群^text>>>stategroupnum()include()天猫淘宝精品优惠
+

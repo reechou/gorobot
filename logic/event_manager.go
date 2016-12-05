@@ -19,6 +19,7 @@ type EventManager struct {
 
 	msgChan chan *ReceiveMsgInfo
 	filters map[string][]*EventFilter
+	crons   map[string][]*EventCron
 
 	stop chan struct{}
 }
@@ -29,6 +30,7 @@ func NewEventManager(wxm *WxManager, cfg *config.Config) *EventManager {
 		cfg:     cfg,
 		msgChan: make(chan *ReceiveMsgInfo, EVENT_MSG_CHAN_LEN),
 		filters: make(map[string][]*EventFilter),
+		crons:   make(map[string][]*EventCron),
 		stop:    make(chan struct{}),
 	}
 	em.loadFile()
@@ -92,11 +94,25 @@ func (self *EventManager) loadFile() {
 				f.FromType = ""
 			}
 			f.Init(self.stop)
-			fv, _ := self.filters[f.WeChat]
+			fv := self.filters[f.WeChat]
 			fv = append(fv, f)
 			self.filters[f.WeChat] = fv
 		case "timer":
 		case "cron":
+			if len(argv) != 4 {
+				logrus.Errorf("cron argv error: %s", line)
+				continue
+			}
+			c := &EventCron{
+				wxm:      self.wxm,
+				WeChat:   argv[1],
+				Time:     argv[2],
+				Do:       argv[3],
+			}
+			c.Init(self.stop)
+			cv := self.crons[c.WeChat]
+			cv = append(cv, c)
+			self.crons[c.WeChat] = cv
 		}
 	}
 	return

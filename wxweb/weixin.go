@@ -1014,7 +1014,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 			receiveMsg.ReceiveEvent = RECEIVE_EVENT_MSG
 			receiveMsg.Msg = content
 		} else if msgType == 51 {
-			logrus.Debug("[*] 成功截获微信初始化消息")
+			//logrus.Debug("[*] 成功截获微信初始化消息")
 		} else if msgType == 10000 {
 			logrus.Debugf("系统消息: %s", content)
 			if strings.Contains(content, "邀请") {

@@ -13,6 +13,7 @@ const (
 	NOTINCLUDE = "notinclude()"
 	INCLUDE    = "include()"
 	EQUAL      = "equal()"
+	STATE_GROUP_NUM = "stategroupnum()"
 )
 
 const (

@@ -1,7 +1,9 @@
 package logic
 
 import (
+	"fmt"
 	"sync"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/wxweb"
@@ -100,11 +102,36 @@ func (self *WxManager) VerifyUser(msg *wxweb.ReceiveMsgInfo) bool {
 }
 
 func (self *WxManager) CheckGroup() {
-
+	
 }
 
-func (self *WxManager) StateGroup() {
-
+func (self *WxManager) StateGroupNum(wechat, g string) string {
+	wx := self.wxs[wechat]
+	if wx == nil {
+		logrus.Errorf("unknown this wechat[%s].", wechat)
+		return ""
+	}
+	g = strings.Replace(g, "\n", "", -1)
+	result := "【%s | 群】群总数-%d 去重群成员数-%d 重复成员数-%d"
+	allGroupNum := 0
+	cfNum := 0
+	members := make(map[string]int)
+	for _, v := range wx.Contact.Groups {
+		if !ExecCheckFunc(g, v.NickName) {
+			continue
+		}
+		allGroupNum++
+		for _, v2 := range v.MemberList {
+			_, ok := members[v2.UserName]
+			if ok {
+				cfNum++
+				continue
+			}
+			members[v2.UserName] = 1
+		}
+	}
+	g = ExecGetArgvFunc(g)
+	return fmt.Sprintf(result, g, allGroupNum, len(members), cfNum)
 }
 
 func (self *WxManager) CheckGroupChat(info *CheckGroupChatInfo) {

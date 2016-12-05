@@ -50,6 +50,12 @@ func (self *DoEvent) changeString(sm *SendMsgInfo, rm *ReceiveMsgInfo) string {
 	if strings.Contains(sm.Msg, FROMMSG) {
 		result = strings.Replace(result, FROMMSG, rm.msg.Msg, -1)
 	}
+	
+	if strings.HasPrefix(sm.Msg, STATE_GROUP_NUM) {
+		result = strings.Replace(result, STATE_GROUP_NUM, "", -1)
+		result = self.wxm.StateGroupNum(sm.WeChat, result)
+	}
+	//logrus.Debugf("result: %s", result)
 
 	return result
 }
