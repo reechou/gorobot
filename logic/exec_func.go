@@ -26,6 +26,6 @@ func ExecCheckFunc(f, value string) bool {
 		v := strings.Replace(f, INCLUDE, "", -1)
 		return value == v
 	}
-	
+
 	return true
 }

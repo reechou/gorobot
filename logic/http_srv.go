@@ -34,7 +34,7 @@ func (self *WxHttpSrv) Run() {
 	logrus.Infof("wxweb http server starting...")
 	self.httpSrv.Run()
 }
- 
+
 func (self *WxHttpSrv) registerHandlers() {
 	self.httpSrv.Route("/", self.Index)
 

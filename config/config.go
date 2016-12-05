@@ -32,7 +32,7 @@ type Config struct {
 	UploadFile   string
 	IfInvite     bool
 	InviteMsg    string
-	
+
 	WxEventFile string
 
 	MemberRedis  RedisInfo

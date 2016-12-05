@@ -37,9 +37,9 @@ func (self *WxHttpSrv) Qrcode(rsp http.ResponseWriter, req *http.Request) (inter
 
 func (self *WxHttpSrv) InviteMemberStatus(rsp http.ResponseWriter, req *http.Request) (interface{}, error) {
 	req.ParseForm()
-	
+
 	response := WxResponse{Code: WX_RESPONSE_OK}
-	
+
 	if len(req.Form["uuid"]) == 0 {
 		response.Code = WX_RESPONSE_ERR
 		response.Msg = "req cannot found uuid."
@@ -53,6 +53,6 @@ func (self *WxHttpSrv) InviteMemberStatus(rsp http.ResponseWriter, req *http.Req
 			response.Data = wx.Contact.IfInviteMemberSuccess
 		}
 	}
-	
+
 	return response, nil
 }

@@ -1307,7 +1307,7 @@ func (self *WxWeb) Run() {
 			if selector == "2" {
 				r := self.webwxsync()
 				if r == nil {
-					time.Sleep(1 * time.Second)
+					time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 					continue
 				}
 				switch r.(type) {
@@ -1316,19 +1316,19 @@ func (self *WxWeb) Run() {
 					self.handleMsg(r)
 				}
 			} else if selector == "0" {
-				time.Sleep(1 * time.Second)
+				time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 			} else if selector == "6" || selector == "4" {
 				self.webwxsync()
-				time.Sleep(1 * time.Second)
+				time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 			} else if selector == "7" {
 				self.webwxsync()
-				time.Sleep(1 * time.Second)
+				time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 			} else if selector == "3" {
 				self.webwxsync()
-				time.Sleep(1 * time.Second)
+				time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 			} else {
 				self.webwxsync()
-				time.Sleep(1 * time.Second)
+				time.Sleep(WEBWX_SYNC_INTERVAL * time.Second)
 			}
 		}
 	}

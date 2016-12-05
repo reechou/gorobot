@@ -2,7 +2,7 @@ package logic
 
 import (
 	"strings"
-	
+
 	"github.com/Sirupsen/logrus"
 )
 
@@ -42,6 +42,6 @@ func (self *DoEvent) changeString(sm *SendMsgInfo, rm *ReceiveMsgInfo) string {
 	if strings.Contains(sm.Msg, FROMMSG) {
 		result = strings.Replace(result, FROMMSG, rm.msg.Msg, -1)
 	}
-	
+
 	return result
 }

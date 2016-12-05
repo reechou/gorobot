@@ -5,6 +5,10 @@ const (
 )
 
 const (
+	WEBWX_SYNC_INTERVAL = 2
+)
+
+const (
 	GROUP_PREFIX = "@@"
 )
 

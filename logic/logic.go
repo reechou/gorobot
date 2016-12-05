@@ -32,7 +32,7 @@ func NewWxLogic(cfg *config.Config) *WxLogic {
 	if cfg.Debug {
 		EnableDebug()
 	}
-	
+
 	l := &WxLogic{
 		cfg:          cfg,
 		memberRedis:  cache.NewRedisCache(&cfg.MemberRedis),

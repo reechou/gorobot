@@ -176,12 +176,12 @@ func (self *UserGroup) GetMsgList(msgId int) []*MsgInfo {
 }
 
 type UserContact struct {
-	wx         *WxWeb
+	wx          *WxWeb
 	Friends     map[string]*UserFriend
 	NickFriends map[string]*UserFriend
 	Groups      map[string]*UserGroup
 	NickGroups  map[string]*UserGroup
-	
+
 	IfInviteMemberSuccess bool
 }
 
@@ -199,7 +199,7 @@ func (self *UserContact) InviteMembers() {
 	if self.wx.cfg.IfInvite {
 		if self.wx.MyNickName == "小健健" {
 			logrus.Debugf("小健健 not exec invite members.")
-			return 
+			return
 		}
 		var groupUserName string
 		for _, v := range self.Groups {

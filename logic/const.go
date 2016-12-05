@@ -2,17 +2,17 @@ package logic
 
 // 变量
 const (
-	EMPTY = "$empty"
+	EMPTY     = "$empty"
 	FROMGROUP = "$fromgroup"
-	FROMUSER = "$fromuser"
-	FROMMSG = "$frommsg"
+	FROMUSER  = "$fromuser"
+	FROMMSG   = "$frommsg"
 )
 
 // 函数
 const (
 	NOTINCLUDE = "notinclude()"
-	INCLUDE = "include()"
-	EQUAL = "equal()"
+	INCLUDE    = "include()"
+	EQUAL      = "equal()"
 )
 
 const (

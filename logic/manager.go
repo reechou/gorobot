@@ -108,5 +108,5 @@ func (self *WxManager) StateGroup() {
 }
 
 func (self *WxManager) CheckGroupChat(info *CheckGroupChatInfo) {
-	
+
 }
