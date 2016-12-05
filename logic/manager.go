@@ -112,7 +112,7 @@ func (self *WxManager) StateGroupNum(wechat, g string) string {
 		return ""
 	}
 	g = strings.Replace(g, "\n", "", -1)
-	result := "【%s | 群】群总数-%d 去重群成员数-%d 重复成员数-%d"
+	result := "[奸笑][奸笑][奸笑]【%s | 群】群总数-%d 去重群成员数-%d 重复成员数-%d"
 	allGroupNum := 0
 	cfNum := 0
 	members := make(map[string]int)
