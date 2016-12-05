@@ -45,12 +45,13 @@ func (self *EventFilter) Init(stop chan struct{}) {
 				ChatType: doDetail[1],
 				Name:     doDetail[2],
 			}
-			msgInfo := strings.Split(doDetail[3], ">")
+			msgInfo := strings.Split(doDetail[3], ">>>")
 			if len(msgInfo) != 2 {
 				continue
 			}
 			msg.MsgType = msgInfo[0]
 			msg.Msg = msgInfo[1]
+			msg.Msg = strings.Replace(msg.Msg, "<br/>", "\n", -1)
 			self.DoEvent = append(self.DoEvent, DoEvent{wxm: self.wxm, Type: DO_EVENT_SENDMSG, DoMsg: msg})
 		case DO_EVENT_VERIFY_USER:
 			self.DoEvent = append(self.DoEvent, DoEvent{wxm: self.wxm, Type: DO_EVENT_VERIFY_USER})
@@ -64,7 +65,7 @@ func (self *EventFilter) Run() {
 	for {
 		select {
 		case msg := <-self.msgChan:
-			//logrus.Debugf("filter msg: %v", msg)
+			//logrus.Debugf("filter msg: %v", msg.msg)
 			if self.Event != msg.msg.ReceiveEvent {
 				continue
 			}

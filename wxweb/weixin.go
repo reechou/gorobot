@@ -584,6 +584,7 @@ func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 		userName := member["UserName"].(string)
 		contactFlag := member["ContactFlag"].(int)
 		nickName := member["NickName"].(string)
+		logrus.Debug(userName, " ", nickName)
 		if strings.HasPrefix(userName, GROUP_PREFIX) {
 			ug := NewUserGroup(contactFlag, nickName, userName, self.rankRedis)
 			self.Contact.Groups[userName] = ug
@@ -958,7 +959,6 @@ func (self *WxWeb) handleMsg(r interface{}) {
 	if msgList == nil {
 		return
 	}
-	//myNickName := self.User["NickName"].(string)
 	for _, v := range msgList {
 		msg := v.(map[string]interface{})
 		if msg == nil {
@@ -975,6 +975,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 			WeChat:       self.MyNickName,
 			FromUserName: fromUserName,
 		}
+		// 文本消息
 		if msgType == 1 {
 			if fromUserName[:2] == GROUP_PREFIX {
 				contentSlice := strings.Split(content, ":<br/>")
@@ -983,7 +984,6 @@ func (self *WxWeb) handleMsg(r interface{}) {
 				if self.filterMsg(fromUserName, content) {
 					continue
 				}
-				//logrus.Debugf("[*] 你有新的群文本消息，请注意查收")
 				group := self.Contact.Groups[fromUserName]
 				if group == nil {
 					logrus.Errorf("cannot found the group[%s]", fromUserName)
@@ -1005,6 +1005,10 @@ func (self *WxWeb) handleMsg(r interface{}) {
 				receiveMsg.FromNickName = sendPeople.NickName
 				receiveMsg.FromType = FROM_TYPE_GROUP
 			} else {
+				uf, ok := self.Contact.Friends[receiveMsg.FromUserName]
+				if ok {
+					receiveMsg.FromNickName = uf.NickName
+				}
 				receiveMsg.FromType = FROM_TYPE_PEOPLE
 			}
 			receiveMsg.ReceiveEvent = RECEIVE_EVENT_MSG

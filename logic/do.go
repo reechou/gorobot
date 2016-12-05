@@ -17,12 +17,20 @@ func (self *DoEvent) Do(rMsg *ReceiveMsgInfo) {
 	case DO_EVENT_SENDMSG:
 		msg, ok := self.DoMsg.(*SendMsgInfo)
 		if ok {
-			if msg.Name == "$from" {
-				msg.Name = rMsg.msg.FromNickName
+			msgCopy := &SendMsgInfo{
+				WeChat:   msg.WeChat,
+				ChatType: msg.ChatType,
+				Name:     msg.Name,
+				UserName: msg.UserName,
+				MsgType:  msg.MsgType,
+				Msg:      msg.Msg,
 			}
-			msg.UserName = rMsg.msg.FromUserName
-			msgResult := self.changeString(msg, rMsg)
-			self.wxm.SendMsg(msg, msgResult)
+			if msgCopy.Name == "$from" {
+				msgCopy.Name = rMsg.msg.FromNickName
+			}
+			msgCopy.UserName = rMsg.msg.FromUserName
+			msgResult := self.changeString(msgCopy, rMsg)
+			self.wxm.SendMsg(msgCopy, msgResult)
 		} else {
 			logrus.Errorf("translate to SendMsgInfo error.")
 		}

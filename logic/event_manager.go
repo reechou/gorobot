@@ -43,6 +43,10 @@ func (self *EventManager) Stop() {
 
 func (self *EventManager) loadFile() {
 	logrus.Debugf("start load event file")
+	defer func() {
+		logrus.Infof("load event filter: %v.", self.filters)
+		logrus.Infof("load event file[%s] success.", self.cfg.WxEventFile)
+	}()
 	f, err := os.Open(self.cfg.WxEventFile)
 	if err != nil {
 		logrus.Errorf("open file[%s] error: %v", self.cfg.WxEventFile, err)
@@ -53,10 +57,10 @@ func (self *EventManager) loadFile() {
 		line, err := buf.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				return
+				break
 			}
 			logrus.Errorf("load event file[%s] error: %v", self.cfg.WxEventFile, err)
-			return
+			break
 		}
 		argv := strings.Split(line, " ")
 		if len(argv) == 0 {
@@ -88,16 +92,13 @@ func (self *EventManager) loadFile() {
 				f.FromType = ""
 			}
 			f.Init(self.stop)
-			fv, ok := self.filters[f.WeChat]
+			fv, _ := self.filters[f.WeChat]
 			fv = append(fv, f)
-			if !ok {
-				self.filters[f.WeChat] = fv
-			}
+			self.filters[f.WeChat] = fv
 		case "timer":
 		case "cron":
 		}
 	}
-	logrus.Infof("load event file[%s] success.", self.cfg.WxEventFile)
 	return
 }
 
