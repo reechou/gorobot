@@ -195,10 +195,39 @@ func NewUserContact(wx *WxWeb) *UserContact {
 	}
 }
 
+func (self *UserContact) InviteMembersPic() {
+	if self.wx.cfg.IfInvite {
+		if self.wx.MyNickName == "铅笔" {
+			logrus.Debugf("[%s] not exec invite members.", self.wx.MyNickName)
+			return
+		}
+		for _, v := range self.Friends {
+			_, ok := self.wx.SpecialUsers[v.UserName]
+			if ok {
+				continue
+			}
+			if v.NickName == "你好杭州" ||
+				v.NickName == "杨龙" ||
+				v.NickName == "凯丽" ||
+				v.NickName == "jasonk" ||
+				strings.Contains(v.NickName, "虎子") {
+				continue
+			}
+			mediaId, ok := self.wx.Webwxuploadmedia(v.UserName, self.wx.cfg.UploadFile)
+			if ok {
+				self.wx.Webwxsendmsgimg(v.UserName, mediaId)
+			}
+			time.Sleep(1 * time.Second)
+		}
+		self.IfInviteMemberSuccess = true
+		logrus.Infof("[%s] invite members success.", self.wx.MyNickName)
+	}
+}
+
 func (self *UserContact) InviteMembers() {
 	if self.wx.cfg.IfInvite {
-		if self.wx.MyNickName == "小健健" {
-			logrus.Debugf("小健健 not exec invite members.")
+		if self.wx.MyNickName == "小健健" || self.wx.MyNickName == "小背带" || self.wx.MyNickName == "铅笔" {
+			logrus.Debugf("[%s] not exec invite members.", self.wx.MyNickName)
 			return
 		}
 		var groupUserName string

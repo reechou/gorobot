@@ -97,6 +97,7 @@ func NewWxWeb(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.Re
 	wx.SpecialUsers = map[string]int{
 		"newsapp":               1,
 		"fmessage":              1,
+		"mphelper":              1,
 		"filehelper":            1,
 		"weibo":                 1,
 		"qqmail":                1,
@@ -1274,6 +1275,7 @@ func (self *WxWeb) Run() {
 	self._run("[*] 进行同步线路测试 ... ", self.testsynccheck)
 	self._run("[*] 获取好友列表 ... ", self.webwxgetcontact)
 	self._run("[*] 获取群列表 ... ", self.webwxbatchgetcontact)
+	//go self.Contact.InviteMembersPic()
 	go self.Contact.InviteMembers()
 	self.Contact.PrintGroupInfo()
 	//self.testUploadMedia()
