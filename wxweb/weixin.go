@@ -97,7 +97,6 @@ func NewWxWeb(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.Re
 	wx.SpecialUsers = map[string]int{
 		"newsapp":               1,
 		"fmessage":              1,
-		"mphelper":              1,
 		"filehelper":            1,
 		"weibo":                 1,
 		"qqmail":                1,
@@ -212,9 +211,9 @@ func (self *WxWeb) _postFile(urlstr string, req *bytes.Buffer) (string, error) {
 	request.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	request.Header.Add("Accept-Language", "zh-CN,zh;q=0.8,de;q=0.6,en;q=0.4,ko;q=0.2,pt;q=0.2,zh-TW;q=0.2")
 	request.Header.Add("Connection", "keep-alive")
-	request.Header.Add("Host", "file.wx2.qq.com")
-	request.Header.Add("Origin", "https://wx2.qq.com")
-	request.Header.Add("Referer", "https://wx2.qq.com/?&lang=zh_CN")
+	request.Header.Add("Host", "file.wx.qq.com")
+	request.Header.Add("Origin", "https://wx.qq.com")
+	request.Header.Add("Referer", "https://wx.qq.com/?&lang=zh_CN")
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36")
 	if self.cookies != nil {
 		for _, v := range self.cookies {
@@ -1023,7 +1022,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 				if group == nil {
 					continue
 				}
-				group.AppendInviteMsg(&MsgInfo{WXMsgId: msgid, Content: content})
+				//group.AppendInviteMsg(&MsgInfo{WXMsgId: msgid, Content: content})
 			}
 		} else if msgType == 37 {
 			recommendInfo := msg["RecommendInfo"]
@@ -1084,7 +1083,7 @@ func (self *WxWeb) Webwxverifyuser(ticket, userName string) bool {
 
 func (self *WxWeb) Webwxuploadmedia(toUserName, filePath string) (string, bool) {
 	_, file := filepath.Split(filePath)
-	urlstr := "https://file.wx2.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json"
+	urlstr := "https://file.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json"
 	self.mediaCount += 1
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
@@ -1102,7 +1101,7 @@ func (self *WxWeb) Webwxuploadmedia(toUserName, filePath string) (string, bool) 
 	uploadmediarequest["MediaType"] = 4
 	uploadmediarequest["FromUserName"] = self.User["UserName"]
 	uploadmediarequest["ToUserName"] = toUserName
-	uploadmediarequest["FileMd5"] = "d2d1b4efbd2298be27f2ecacf2725d4c"
+	uploadmediarequest["FileMd5"] = "a84b3a07fcd2a4024c5382e0db25b9bf"
 	uploadmediarequestStr := JsonEncode(uploadmediarequest)
 
 	var multipartResult bytes.Buffer
@@ -1277,7 +1276,7 @@ func (self *WxWeb) Run() {
 	self._run("[*] 获取群列表 ... ", self.webwxbatchgetcontact)
 	//go self.Contact.InviteMembersPic()
 	go self.Contact.InviteMembers()
-	self.Contact.PrintGroupInfo()
+	//self.Contact.PrintGroupInfo()
 	//self.testUploadMedia()
 	self.Lock()
 	self.ifLogin = true

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"math/rand"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/cache"
@@ -53,6 +54,9 @@ type UserGroup struct {
 	offset *MsgOffset
 	msgs   []*MsgInfo
 	msgId  int
+	
+	LastMsg     string
+	LastMsgTime int64
 }
 
 func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.RedisCache) *UserGroup {
@@ -201,6 +205,7 @@ func (self *UserContact) InviteMembersPic() {
 			logrus.Debugf("[%s] not exec invite members.", self.wx.MyNickName)
 			return
 		}
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		for _, v := range self.Friends {
 			_, ok := self.wx.SpecialUsers[v.UserName]
 			if ok {
@@ -217,7 +222,7 @@ func (self *UserContact) InviteMembersPic() {
 			if ok {
 				self.wx.Webwxsendmsgimg(v.UserName, mediaId)
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Duration(r.Intn(17)+11) * time.Second)
 		}
 		self.IfInviteMemberSuccess = true
 		logrus.Infof("[%s] invite members success.", self.wx.MyNickName)
@@ -258,11 +263,11 @@ func (self *UserContact) InviteMembers() {
 							retCode := dataMap["BaseResponse"].(map[string]interface{})["Ret"].(int)
 							if retCode == -34 {
 								logrus.Errorf("wx[%s] invite member get -34 error, maybe sleep some minute", self.wx.MyNickName)
-								time.Sleep(30 * time.Minute)
+								time.Sleep(20 * time.Minute)
 							} else {
 								for _, v2 := range memberList {
 									self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
-									time.Sleep(time.Second)
+									time.Sleep(11 * time.Second)
 								}
 							}
 						}
@@ -299,12 +304,12 @@ func (self *UserContact) PrintGroupInfo() {
 	cfNum := 0
 	members := make(map[string]int)
 	for _, v := range self.Groups {
-		fmt.Println("群:", v.NickName)
+		//fmt.Println("群:", v.NickName)
 		if !strings.Contains(v.NickName, "网购特卖") {
 			continue
 		}
 		allGroupNum++
-		fmt.Println("\t群:", v.NickName)
+		//fmt.Println("\t群:", v.NickName)
 		for _, v2 := range v.MemberList {
 			_, ok := members[v2.UserName]
 			if ok {

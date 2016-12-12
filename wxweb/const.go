@@ -1,6 +1,10 @@
 package wxweb
 
 const (
+	LOGIN_WECHAT_HOST = "login.web.wechat.com"
+)
+
+const (
 	WX_RET_SUCCESS = iota
 )
 
