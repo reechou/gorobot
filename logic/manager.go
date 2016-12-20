@@ -2,8 +2,8 @@ package logic
 
 import (
 	"fmt"
-	"sync"
 	"strings"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/wxweb"
@@ -102,7 +102,7 @@ func (self *WxManager) VerifyUser(msg *wxweb.ReceiveMsgInfo) bool {
 }
 
 func (self *WxManager) CheckGroup() {
-	
+
 }
 
 func (self *WxManager) StateGroupNum(wechat, g string) string {

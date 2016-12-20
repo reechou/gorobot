@@ -104,10 +104,10 @@ func (self *EventManager) loadFile() {
 				continue
 			}
 			c := &EventCron{
-				wxm:      self.wxm,
-				WeChat:   argv[1],
-				Time:     argv[2],
-				Do:       argv[3],
+				wxm:    self.wxm,
+				WeChat: argv[1],
+				Time:   argv[2],
+				Do:     argv[3],
 			}
 			c.Init(self.stop)
 			cv := self.crons[c.WeChat]

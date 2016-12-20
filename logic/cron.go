@@ -2,10 +2,10 @@ package logic
 
 import (
 	"strings"
-	
-	"github.com/robfig/cron"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/wxweb"
+	"github.com/robfig/cron"
 )
 
 type EventCron struct {
@@ -19,7 +19,7 @@ type EventCron struct {
 
 func (self *EventCron) Init(stop chan struct{}) {
 	self.stop = stop
-	
+
 	doList := strings.Split(self.Do, ",")
 	for _, v := range doList {
 		doDetail := strings.Split(v, "^")
@@ -57,7 +57,7 @@ func (self *EventCron) Run() {
 	c := cron.New()
 	c.AddFunc(self.Time, self.cronRun)
 	c.Start()
-	
+
 	select {
 	case <-self.stop:
 		c.Stop()

@@ -5,6 +5,11 @@ const (
 	WX_RESPONSE_ERR
 )
 
+type StartWxRsp struct {
+	UUID      string `json:"uuid"`
+	QrcodeUrl string `json:"qrcodeUrl"`
+}
+
 type WxResponse struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`

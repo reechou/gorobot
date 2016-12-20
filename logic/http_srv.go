@@ -39,6 +39,7 @@ func (self *WxHttpSrv) registerHandlers() {
 	self.httpSrv.Route("/", self.Index)
 
 	self.httpSrv.Route("/startwx", self.httpWrap(self.StartWx))
+	self.httpSrv.Route("/startwx2", self.httpWrap(self.StartWxWithArgv))
 	self.httpSrv.Route("/qrcode", self.httpWrap(self.Qrcode))
 	self.httpSrv.Route("/invite_status", self.httpWrap(self.InviteMemberStatus))
 }

@@ -39,6 +39,6 @@ func ExecGetArgvFunc(f string) string {
 	} else if strings.HasPrefix(f, EQUAL) {
 		v = strings.Replace(f, EQUAL, "", -1)
 	}
-	
+
 	return v
 }

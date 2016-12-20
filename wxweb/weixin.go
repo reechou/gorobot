@@ -37,6 +37,12 @@ func debugPrint(content interface{}) {
 	}
 }
 
+type StartWxArgv struct {
+	IfInvite        bool   `json:"ifInvite"`
+	IfInviteEndExit bool   `json:"inviteEndExit"`
+	InviteMsg       string `json:"inviteMsg"`
+}
+
 type WxHandler interface {
 	Login(uuid string)
 	Logout(uuid string)
@@ -68,6 +74,7 @@ type WxWeb struct {
 	lastCheckTs    int64
 	mediaCount     int64
 	TestUserName   string
+	QrcodeUrl      string
 
 	cfg          *config.Config
 	memberRedis  *cache.RedisCache
@@ -76,11 +83,13 @@ type WxWeb struct {
 
 	Contact *UserContact
 	wxh     WxHandler
+	argv    *StartWxArgv
 
 	startTime int64
 	ifLogin   bool
 	ifLogout  bool
 	enable    bool
+	ifCleared bool
 	stopped   chan struct{}
 }
 
@@ -94,7 +103,29 @@ func NewWxWeb(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.Re
 		stopped:      make(chan struct{}),
 		wxh:          wxh,
 	}
-	wx.SpecialUsers = map[string]int{
+	wx.initSpecialUsers()
+
+	return wx
+}
+
+func NewWxWebWithArgv(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.RedisCache, wxh WxHandler, argv *StartWxArgv) *WxWeb {
+	wx := &WxWeb{
+		cfg:          cfg,
+		memberRedis:  memberRedis,
+		rankRedis:    rankRedis,
+		sessionRedis: sessionRedis,
+		mediaCount:   -1,
+		stopped:      make(chan struct{}),
+		wxh:          wxh,
+		argv:         argv,
+	}
+	wx.initSpecialUsers()
+
+	return wx
+}
+
+func (self *WxWeb) initSpecialUsers() {
+	self.SpecialUsers = map[string]int{
 		"newsapp":               1,
 		"fmessage":              1,
 		"filehelper":            1,
@@ -125,9 +156,8 @@ func NewWxWeb(cfg *config.Config, memberRedis, rankRedis, sessionRedis *cache.Re
 		"notification_messages": 1,
 		"wxitil":                1,
 		"userexperience_alarm":  1,
+		"mphelper":  1,
 	}
-
-	return wx
 }
 
 func (self *WxWeb) Stop() {
@@ -140,15 +170,24 @@ func (self *WxWeb) Stop() {
 }
 
 func (self *WxWeb) Clear() {
-	qrcode := self.uuid + ".jpg"
-	err := os.Remove(qrcode)
-	if err != nil {
-		logrus.Errorf("remove qrcode[%s] error: %v", qrcode, err)
+	self.Lock()
+	defer self.Unlock()
+	if !self.ifCleared {
+		qrcode := self.uuid + ".jpg"
+		err := os.Remove(qrcode)
+		if err != nil {
+			logrus.Errorf("remove qrcode[%s] error: %v", qrcode, err)
+		}
+		self.ifCleared = true
 	}
 }
 
 func (self *WxWeb) UUID() string {
 	return self.uuid
+}
+
+func (self *WxWeb) QRCODE() string {
+	return self.QrcodeUrl
 }
 
 func (self *WxWeb) IfLogin() bool {
@@ -313,6 +352,7 @@ func (self *WxWeb) genQRcode(args ...interface{}) bool {
 	urlstr := "https://login.weixin.qq.com/qrcode/" + self.uuid
 	urlstr += "?t=webwx"
 	urlstr += "&_=" + self._unixStr()
+	self.QrcodeUrl = urlstr
 	path := self.uuid + ".jpg"
 	out, err := os.Create(path)
 	resp, err := self._get(urlstr, false)
@@ -325,7 +365,7 @@ func (self *WxWeb) genQRcode(args ...interface{}) bool {
 		}
 		//else {
 		//	go func() {
-		//		fmt.Println("please open on web broswer ip:8889/qrcode")
+		//		fmt.Println("please open on web browser ip:8889/qrcode")
 		//		http.HandleFunc("/qrcode", func(w http.ResponseWriter, req *http.Request) {
 		//			http.ServeFile(w, req, "qrcode.jpg")
 		//			return
@@ -584,7 +624,7 @@ func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 		userName := member["UserName"].(string)
 		contactFlag := member["ContactFlag"].(int)
 		nickName := member["NickName"].(string)
-		logrus.Debug(userName, " ", nickName)
+		//logrus.Debugf("nickname[%s] username[%s] %v", nickName, userName, member)
 		if strings.HasPrefix(userName, GROUP_PREFIX) {
 			ug := NewUserGroup(contactFlag, nickName, userName, self.rankRedis)
 			self.Contact.Groups[userName] = ug
@@ -592,9 +632,11 @@ func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 			alias := member["Alias"].(string)
 			city := member["City"].(string)
 			sex := member["Sex"].(int)
+			verifyFlag := member["VerifyFlag"].(int)
 			uf := &UserFriend{
 				Alias:       alias,
 				City:        city,
+				VerifyFlag:  verifyFlag,
 				ContactFlag: contactFlag,
 				NickName:    nickName,
 				Sex:         sex,
@@ -1240,6 +1282,10 @@ func (self *WxWeb) _init() {
 }
 
 func (self *WxWeb) Start() {
+	if self.argv == nil {
+		self.argv = &StartWxArgv{IfInvite: true, IfInviteEndExit: true, InviteMsg: self.cfg.InviteMsg}
+	}
+
 	self.startTime = time.Now().Unix()
 
 	self.Lock()

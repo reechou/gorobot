@@ -10,9 +10,9 @@ const (
 
 // 函数
 const (
-	NOTINCLUDE = "notinclude()"
-	INCLUDE    = "include()"
-	EQUAL      = "equal()"
+	NOTINCLUDE      = "notinclude()"
+	INCLUDE         = "include()"
+	EQUAL           = "equal()"
 	STATE_GROUP_NUM = "stategroupnum()"
 )
 
@@ -37,5 +37,5 @@ const (
 
 const (
 	EVENT_MSG_CHAN_LEN  = 1024
-	WAIT_LOGIN_MAX_TIME = 120
+	WAIT_LOGIN_MAX_TIME = 360
 )

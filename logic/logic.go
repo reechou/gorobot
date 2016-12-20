@@ -84,6 +84,22 @@ func (self *WxLogic) StartWx() string {
 	return wx.UUID()
 }
 
+func (self *WxLogic) StartWxWithArgv(argv *wxweb.StartWxArgv) *StartWxRsp {
+	wx := wxweb.NewWxWebWithArgv(self.cfg, self.memberRedis, self.rankRedis, self.sessionRedis, self, argv)
+	wx.Start()
+	go wx.Run()
+	self.Lock()
+	self.wxs[wx.UUID()] = wx
+	self.Unlock()
+
+	rsp := &StartWxRsp{
+		UUID:      wx.UUID(),
+		QrcodeUrl: wx.QRCODE(),
+	}
+
+	return rsp
+}
+
 func (self *WxLogic) Login(uuid string) {
 	logrus.Infof("uuid[%s] login success.", uuid)
 	wx, ok := self.wxs[uuid]

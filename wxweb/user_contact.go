@@ -2,10 +2,10 @@ package wxweb
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"sync"
 	"time"
-	"math/rand"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/reechou/gorobot/cache"
@@ -18,6 +18,7 @@ const (
 type UserFriend struct {
 	Alias       string
 	City        string
+	VerifyFlag  int
 	ContactFlag int
 	NickName    string
 	Sex         int
@@ -54,14 +55,14 @@ type UserGroup struct {
 	offset *MsgOffset
 	msgs   []*MsgInfo
 	msgId  int
-	
+
 	LastMsg     string
 	LastMsgTime int64
 }
 
 func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.RedisCache) *UserGroup {
-	logrus.Debugf("新增群组: %s", nickName)
-	logrus.Debugf("群组user name: %s", userName)
+	//logrus.Debugf("新增群组: %s", nickName)
+	//logrus.Debugf("群组user name: %s", userName)
 	return &UserGroup{
 		ContactFlag: contactFlag,
 		NickName:    nickName,
@@ -230,8 +231,12 @@ func (self *UserContact) InviteMembersPic() {
 }
 
 func (self *UserContact) InviteMembers() {
-	if self.wx.cfg.IfInvite {
-		if self.wx.MyNickName == "小健健" || self.wx.MyNickName == "小背带" || self.wx.MyNickName == "铅笔" {
+	if self.wx.argv.IfInvite {
+		inviteMsg := self.wx.argv.InviteMsg
+		if inviteMsg == "" {
+			inviteMsg = self.wx.cfg.InviteMsg
+		}
+		if self.wx.MyNickName == "小健健" {
 			logrus.Debugf("[%s] not exec invite members.", self.wx.MyNickName)
 			return
 		}
@@ -250,11 +255,14 @@ func (self *UserContact) InviteMembers() {
 				if ok {
 					continue
 				}
-				if v.NickName == "你好杭州" {
+				//if v.NickName == "你好杭州" {
+				//	continue
+				//}
+				if v.VerifyFlag == 24 {
 					continue
 				}
 				memberList = append(memberList, v.UserName)
-				if len(memberList) >= 10 {
+				if len(memberList) >= 9 {
 					data, ok := self.wx.WebwxupdatechatroomInvitemember(groupUserName, memberList)
 					if ok {
 						dataJson := JsonDecode(data)
@@ -263,11 +271,11 @@ func (self *UserContact) InviteMembers() {
 							retCode := dataMap["BaseResponse"].(map[string]interface{})["Ret"].(int)
 							if retCode == -34 {
 								logrus.Errorf("wx[%s] invite member get -34 error, maybe sleep some minute", self.wx.MyNickName)
-								time.Sleep(20 * time.Minute)
+								time.Sleep(17 * time.Minute)
 							} else {
 								for _, v2 := range memberList {
-									self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
-									time.Sleep(11 * time.Second)
+									self.wx.Webwxsendmsg(inviteMsg, v2)
+									time.Sleep(7 * time.Second)
 								}
 							}
 						}
@@ -286,7 +294,8 @@ func (self *UserContact) InviteMembers() {
 				time.Sleep(8 * time.Second)
 				self.wx.WebwxupdatechatroomInvitemember(groupUserName, memberList)
 				for _, v2 := range memberList {
-					self.wx.Webwxsendmsg(self.wx.cfg.InviteMsg, v2)
+					self.wx.Webwxsendmsg(inviteMsg, v2)
+					time.Sleep(5 * time.Second)
 				}
 				// clear
 				memberList = nil
@@ -296,6 +305,9 @@ func (self *UserContact) InviteMembers() {
 		}
 		self.IfInviteMemberSuccess = true
 		logrus.Infof("[%s] invite members success.", self.wx.MyNickName)
+	}
+	if self.wx.argv.IfInviteEndExit {
+		self.wx.Stop()
 	}
 }
 
