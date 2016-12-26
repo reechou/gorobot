@@ -590,7 +590,7 @@ func (self *WxWeb) webwxstatusnotify(args ...interface{}) bool {
 
 func (self *WxWeb) webwxstatusnotifyMsgRead(toUserName string) bool {
 	now := time.Now().Unix()
-	if now - self.msgReadTimestamp < 17 {
+	if now - self.msgReadTimestamp < 13 {
 		return true
 	}
 	self.msgReadTimestamp = now
