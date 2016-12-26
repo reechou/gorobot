@@ -75,6 +75,8 @@ type WxWeb struct {
 	mediaCount     int64
 	TestUserName   string
 	QrcodeUrl      string
+	
+	msgReadTimestamp int64
 
 	cfg          *config.Config
 	memberRedis  *cache.RedisCache
@@ -469,7 +471,7 @@ func (self *WxWeb) webwxinit(args ...interface{}) bool {
 	chats := strings.Split(chatSet, ",")
 	for _, v := range chats {
 		if strings.HasPrefix(v, GROUP_PREFIX) {
-			ug := NewUserGroup(0, "", v, self.rankRedis)
+			ug := NewUserGroup(0, "", v, self.rankRedis, self)
 			self.Contact.Groups[v] = ug
 		}
 	}
@@ -586,6 +588,36 @@ func (self *WxWeb) webwxstatusnotify(args ...interface{}) bool {
 	return retCode == 0
 }
 
+func (self *WxWeb) webwxstatusnotifyMsgRead(toUserName string) bool {
+	now := time.Now().Unix()
+	if now - self.msgReadTimestamp < 17 {
+		return true
+	}
+	self.msgReadTimestamp = now
+	
+	urlstr := fmt.Sprintf("%s/webwxstatusnotify", self.baseUri)
+	params := make(map[string]interface{})
+	params["BaseRequest"] = self.BaseRequest
+	params["Code"] = 1
+	params["FromUserName"] = self.User["UserName"]
+	params["ToUserName"] = toUserName
+	params["ClientMsgId"] = self._unixStr()
+	res, err := self._post(urlstr, params, true)
+	if err != nil {
+		logrus.Errorf("webwxstatusnotifyMsgRead post error: %v", err)
+		return false
+	}
+	dataJson := JsonDecode(res)
+	if dataJson == nil {
+		logrus.Errorf("webwxstatusnotifyMsgRead JsonDecode datajson == nil")
+		return false
+	}
+	data := dataJson.(map[string]interface{})
+	logrus.Debugf("[%s] webwxstatusnotifyMsgRead[%s] data: %v", self.MyNickName, toUserName, data)
+	retCode := data["BaseResponse"].(map[string]interface{})["Ret"].(int)
+	return retCode == 0
+}
+
 func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 	urlstr := fmt.Sprintf("%s/webwxgetcontact?lang=zh_CN&pass_ticket=%s&seq=0&skey=%s&r=%s", self.baseUri, self.passTicket, self.skey, self._unixStr())
 	res, err := self._post(urlstr, nil, true)
@@ -626,7 +658,7 @@ func (self *WxWeb) webwxgetcontact(args ...interface{}) bool {
 		nickName := member["NickName"].(string)
 		//logrus.Debugf("nickname[%s] username[%s] %v", nickName, userName, member)
 		if strings.HasPrefix(userName, GROUP_PREFIX) {
-			ug := NewUserGroup(contactFlag, nickName, userName, self.rankRedis)
+			ug := NewUserGroup(contactFlag, nickName, userName, self.rankRedis, self)
 			self.Contact.Groups[userName] = ug
 		} else {
 			alias := member["Alias"].(string)
@@ -960,7 +992,7 @@ func (self *WxWeb) handleMsg(r interface{}) {
 					groupNickName := modContact["NickName"].(string)
 					group := self.Contact.Groups[userName]
 					if group == nil {
-						group = NewUserGroup(groupContactFlag, groupNickName, userName, self.rankRedis)
+						group = NewUserGroup(groupContactFlag, groupNickName, userName, self.rankRedis, self)
 					} else {
 						group.ContactFlag = groupContactFlag
 						group.NickName = groupNickName
@@ -1042,6 +1074,9 @@ func (self *WxWeb) handleMsg(r interface{}) {
 					Content:  content,
 				}
 				group.AppendMsg(msg)
+				
+				// 读取消息
+				self.webwxstatusnotifyMsgRead(fromUserName)
 
 				receiveMsg.FromGroupName = group.NickName
 				receiveMsg.FromNickName = sendPeople.NickName
@@ -1245,7 +1280,7 @@ func (self *WxWeb) Webwxsendmsg(message string, toUseName string) bool {
 		logrus.Errorf("wx send msg[%s] toUserName[%s] error: %s", message, toUseName, err)
 		return false
 	} else {
-		logrus.Debugf("wx send msg[%s] toUserName[%s] success.", message, toUseName)
+		logrus.Debugf("wx[%s] send msg[%s] toUserName[%s] success.", self.MyNickName, message, toUseName)
 		return true
 	}
 }
@@ -1322,7 +1357,7 @@ func (self *WxWeb) Run() {
 	self._run("[*] 获取群列表 ... ", self.webwxbatchgetcontact)
 	//go self.Contact.InviteMembersPic()
 	go self.Contact.InviteMembers()
-	//self.Contact.PrintGroupInfo()
+	self.Contact.PrintGroupInfo()
 	//self.testUploadMedia()
 	self.Lock()
 	self.ifLogin = true

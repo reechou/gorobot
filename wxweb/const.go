@@ -17,6 +17,12 @@ const (
 )
 
 const (
+	WX_BOY   = 1
+	WX_GIRL  = 2
+	WX_OTHER = 0
+)
+
+const (
 	FROM_TYPE_PEOPLE         = "people"
 	FROM_TYPE_GROUP          = "group"
 	RECEIVE_EVENT_MSG        = "receivemsg"

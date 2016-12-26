@@ -1,7 +1,6 @@
 package wxweb
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 	"sync"
@@ -49,7 +48,8 @@ type UserGroup struct {
 	NickName    string
 	UserName    string
 	MemberList  map[string]*GroupUserInfo
-
+	
+	wx        *WxWeb
 	rankRedis *cache.RedisCache
 
 	offset *MsgOffset
@@ -60,7 +60,7 @@ type UserGroup struct {
 	LastMsgTime int64
 }
 
-func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.RedisCache) *UserGroup {
+func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.RedisCache, wx *WxWeb) *UserGroup {
 	//logrus.Debugf("新增群组: %s", nickName)
 	//logrus.Debugf("群组user name: %s", userName)
 	return &UserGroup{
@@ -76,6 +76,7 @@ func NewUserGroup(contactFlag int, nickName, userName string, rankRedis *cache.R
 		},
 		msgs:      make([]*MsgInfo, MSG_LEN),
 		rankRedis: rankRedis,
+		wx:        wx,
 	}
 }
 
@@ -94,8 +95,8 @@ func (self *UserGroup) AppendInviteMsg(msg *MsgInfo) {
 	}
 	inviteUsers := strings.Split(users[1], "、")
 	for _, v := range inviteUsers {
-		//has, err := self.rankRedis.HSetNX("invite_"+self.NickName, v, true)
-		has, err := self.rankRedis.HSetNX("invite_wx_rank", v, true)
+		has, err := self.rankRedis.HSetNX("invite_"+self.NickName, v, true)
+		//has, err := self.rankRedis.HSetNX("invite_wx_rank", v, true)
 		if err != nil {
 			logrus.Errorf("hsetnx invite[%s] error: %v", v, err)
 			continue
@@ -249,15 +250,22 @@ func (self *UserContact) InviteMembers() {
 		}
 		if groupUserName != "" {
 			inviteNum := 0
-			var memberList []string
+			var friends []*UserFriend
+			var otherFriends []*UserFriend
 			for _, v := range self.Friends {
+				if v.Sex == WX_GIRL {
+					friends = append(friends, v)
+				} else {
+					otherFriends = append(otherFriends, v)
+				}
+			}
+			friends = append(friends, otherFriends...)
+			var memberList []string
+			for _, v := range friends {
 				_, ok := self.wx.SpecialUsers[v.UserName]
 				if ok {
 					continue
 				}
-				//if v.NickName == "你好杭州" {
-				//	continue
-				//}
 				if v.VerifyFlag == 24 {
 					continue
 				}
@@ -316,12 +324,10 @@ func (self *UserContact) PrintGroupInfo() {
 	cfNum := 0
 	members := make(map[string]int)
 	for _, v := range self.Groups {
-		//fmt.Println("群:", v.NickName)
 		if !strings.Contains(v.NickName, "网购特卖") {
 			continue
 		}
 		allGroupNum++
-		//fmt.Println("\t群:", v.NickName)
 		for _, v2 := range v.MemberList {
 			_, ok := members[v2.UserName]
 			if ok {
@@ -331,6 +337,6 @@ func (self *UserContact) PrintGroupInfo() {
 			members[v2.UserName] = 1
 		}
 	}
-	fmt.Println("[*] REAL-群组数:", allGroupNum)
-	fmt.Println("[*] REAL-去重群成员总数:", len(members), cfNum)
+	logrus.Info("[*] REAL-群组数:", allGroupNum)
+	logrus.Info("[*] REAL-去重群成员总数:", len(members), cfNum)
 }
